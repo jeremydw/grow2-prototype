@@ -1,0 +1,10 @@
+{
+  "name": "grow",
+  "main": "internal/server.js",
+  "scripts": {
+    "start": "node internal/server.js"
+  },
+  "dependencies": {
+    "express": "4.16.3"
+  }
+}

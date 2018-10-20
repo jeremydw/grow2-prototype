@@ -1,0 +1,8 @@
+$view: /views/base.html
+items:
+- title: Foo
+  body: Bar
+- title: Foo
+  body: Bar
+- title: Foo
+  body: Bar
