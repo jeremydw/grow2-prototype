@@ -1,22 +1,23 @@
-var _ENV = nunjucks.configure('../', {
-  autoescape: true,
-  web: {
-    async: true
+/**
+ * Helper to deep walk objects.
+ */
+
+async function iterate(obj, cb) {
+  for (var property in obj) {
+    await cb(obj);
+    if (obj.hasOwnProperty(property)) {
+      var val = obj[property];
+      if (typeof val == 'object') {
+	await iterate(val, cb);
+      }
+    }
   }
-});
+}
 
-_ENV.addFilter('resolve', async function(resolver, cb) {
-  await resolver.resolve();
-  cb(null, resolver);
-}, true);
 
-_ENV.addFilter('localize', function(str) {
-  return str;
-});
-
-_ENV.addFilter('json', function(obj) {
-  return JSON.stringify(obj);
-});
+/**
+ * Cache to avoid round-trips to the server for files.
+ */
 
 
 function Cache() {
@@ -41,6 +42,11 @@ Cache.prototype.get = function (key) {
 
 const _DOC_CACHE= new Cache();
 const _HTTP_CACHE = new Cache();
+
+
+/**
+ * Custom YAML types.
+ */
 
 
 var DocYamlType = new jsyaml.Type('!g.doc', {
@@ -213,17 +219,29 @@ Doc.prototype._resolve = async function() {
 };
 
 
-async function iterate(obj, cb) {
-  for (var property in obj) {
-    await cb(obj);
-    if (obj.hasOwnProperty(property)) {
-      var val = obj[property];
-      if (typeof val == 'object') {
-	await iterate(val, cb);
-      }
-    }
+/**
+ * Set up the nunchucks env.
+ */
+
+var _ENV = nunjucks.configure('../', {
+  autoescape: true,
+  web: {
+    async: true
   }
-}
+});
+
+_ENV.addFilter('resolve', async function(resolver, cb) {
+  await resolver.resolve();
+  cb(null, resolver);
+}, true);
+
+_ENV.addFilter('localize', function(str) {
+  return str;
+});
+
+_ENV.addFilter('json', function(obj) {
+  return JSON.stringify(obj);
+});
 
 
 async function main() {
