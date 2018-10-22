@@ -1,0 +1,5 @@
+routes:
+- pattern: /
+  doc: !g.doc /content/pages/index.yaml
+- pattern: /:base/
+  collection: /content/pages/

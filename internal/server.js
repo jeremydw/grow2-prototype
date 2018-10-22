@@ -3,10 +3,17 @@ const express = require('express');
 
 var app = express();
 app.use('/content', express.static(path.join(__dirname, '../content/')));
-app.use('/views', express.static(path.join(__dirname, '../views/')));
-app.use('//views', express.static(path.join(__dirname, '../views/')));
 app.use('/internal', express.static(__dirname));
-app.get('/', function(req, res) {
+app.use('/views', express.static(path.join(__dirname, '../views/')));
+
+// NOTE: Ugh this is super hacky. We need this express app to not suck.
+app.use('//views', express.static(path.join(__dirname, '../views/')));
+app.use('///views', express.static(path.join(__dirname, '../views/')));
+app.use('////views', express.static(path.join(__dirname, '../views/')));
+
+app.use('/podspec.yaml', express.static(path.join(__dirname, '../podspec.yaml')));
+app.use('/routes.yaml', express.static(path.join(__dirname, '../routes.yaml')));
+app.get('*', function(req, res) {
   res.sendFile(__dirname + '/grow.html');
 });
 

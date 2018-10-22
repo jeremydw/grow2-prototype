@@ -1,4 +1,4 @@
-var _ENV = nunjucks.configure('', {
+var _ENV = nunjucks.configure('../', {
   autoescape: true,
   web: {
     async: true
@@ -16,10 +16,6 @@ _ENV.addFilter('localize', function(str) {
 
 _ENV.addFilter('json', function(obj) {
   return JSON.stringify(obj);
-});
-
-_ENV.addFilter('slug', function(str) {
-  return str;
 });
 
 
@@ -130,6 +126,46 @@ function Doc(path) {
 }
 
 
+function Routes(path) {
+  this.path = path;
+  this.trie = new Trie();
+  this.doc_ = getDoc(path);
+}
+
+
+Routes.prototype.match = function(path) {
+  // Return the doc to render.
+  let match = this.trie.match(path);
+  if (!match.node) {
+    throw Error('No pattern in /routes.yaml matches -> ' + path);
+    return;
+  }
+  let data = match.node.data;
+
+  if (data.doc) {
+    return data.doc;
+  } else if (data.collection) {
+    // NOTE: So hacky. We should have methods to convert routes nicely.
+    return getDoc(data.collection + match.params['base'] + '.yaml');
+  }
+};
+
+
+Routes.prototype.resolve = async function() {
+  await this.doc_.resolve();
+  this.doc_.fields['routes'].forEach(function(route) {
+    // NOTE: I hacked trie.js to allow for this second argument to put
+    // arbitrary data on the matched nodes.
+    this.trie.define(route.pattern, route);
+  }.bind(this));
+}
+
+
+function Pod() {
+  this.routes = new Routes('/routes.yaml');
+}
+
+
 Doc.prototype.populate = function() {
   for (var property in this.fields) {
     // TODO: Handle builtins somehow.
@@ -192,11 +228,19 @@ async function iterate(obj, cb) {
 
 async function main() {
   let startTime = performance.now();
-  // TODO: Determine doc based on route.
-  let doc = getDoc('/content/pages/index.yaml');
+
+  // Make a pod and resolve the routes from /routes.yaml.
+  let pod = new Pod();
+  await pod.routes.resolve();
+
+  // Get the doc that corresponds to the URL.
+  let doc = pod.routes.match(window.location.pathname);
+
   await doc.resolve();
   let endTime = performance.now();
   console.log('Loaded: ' + Math.floor(endTime - startTime) + 'ms');
+
+  // Render the doc and write the output to the browser document.
   startTime = performance.now();
   let view = normalizeView(doc);
   let html = _ENV.render(view, {
