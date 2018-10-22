@@ -1,5 +1,20 @@
 # grow2 prototype
 
+## Try it
+
+### Locally
+
+```
+# Local (uses files from your computer)
+npm start
+```
+
+### GitHub
+
+Reads files from [https://github.com/jeremydw/grow2-prototype](https://github.com/jeremydw/grow2-prototype).
+
+- [https://grow2-prototype.grow-prod.appspot.com](https://grow2-prototype.grow-prod.appspot.com)
+
 ## Notes
 
 - Implements client-side page rendering.

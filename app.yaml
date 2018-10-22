@@ -1,0 +1,33 @@
+runtime: python27
+service: grow2-prototype
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /internal/lib/(.*\..*)
+  static_files: internal/lib/\1
+  upload: internal/lib/(.*\..*)
+  secure: always
+- url: /internal/grow.js
+  static_files: internal/grow.js
+  upload: internal/grow.js
+  secure: always
+- url: /(.*\..*)
+  static_files: internal/grow.html
+  upload: internal/grow.html
+  secure: always
+- url: /(.+)/
+  static_files: internal/grow.html
+  upload: internal/grow.html
+  secure: always
+- url: /(.+)
+  static_files: internal/grow.html
+  upload: internal/grow.html
+  secure: always
+- url: /
+  static_files: internal/grow.html
+  upload: internal/grow.html
+  secure: always
+
+skip_files:
+- (?!internal).*
