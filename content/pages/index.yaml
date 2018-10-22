@@ -4,6 +4,7 @@ description: Grow2 Description
 partials:
 - partial: hero
   title: Hero title.
+  body: Hero body.
   cta:
     title: Hero CTA
     url: 'http://example.com'

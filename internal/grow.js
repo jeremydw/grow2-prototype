@@ -1,3 +1,12 @@
+if (window.location.href.indexOf('localhost') > -1) {
+  var ENV = 'local';
+} else {
+  var ENV = 'github';
+}
+
+var GITHUB_ROOT = 'https://raw.githubusercontent.com/jeremydw/grow2-prototype/master'; 
+
+
 /**
  * Helper to deep walk objects.
  */
@@ -239,7 +248,11 @@ Doc.prototype._resolve = async function() {
     var resp = _HTTP_CACHE.get(this.path);
   } else {
     // NOTE: We want to abstract this out so we can use fs in the Node env.
-    var resp = await jQuery.get(this.path);
+    let path = this.path;
+    if (ENV == 'github') {
+      path = GITHUB_ROOT + this.path;
+    }
+    var resp = await jQuery.get(path);
     _HTTP_CACHE.set(this.path, resp);
   }
   let fields = await jsyaml.load(resp, {schema: schema});
@@ -266,7 +279,12 @@ function gettext(content) {
 
 
 function setupNunjucks() {
-  let env = nunjucks.configure('../', {
+  // ../ is a hack. Get it working correctly. See the junk in server.js.
+  var root = '../';
+  if (ENV == 'github') {
+    root = GITHUB_ROOT;
+  }
+  let env = nunjucks.configure(root, {
     autoescape: true,
     web: {
       async: true
