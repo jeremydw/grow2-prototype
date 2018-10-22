@@ -4,7 +4,7 @@ description: Grow2 Description
 partials:
 - partial: hero
   title: Hero title.
-  body: Hero body. Hello from GitHub!
+  body: Hero body. Hello from GitHub! Hello from GitHub again. Is this crazy?
   cta:
     title: Hero CTA
     url: 'http://example.com'
