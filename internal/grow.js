@@ -52,7 +52,7 @@ const _HTTP_CACHE = new Cache();
 var DocYamlType = new jsyaml.Type('!g.doc', {
   kind: 'scalar',
   construct: function(path) {
-    return getDoc(path);
+    return Doc.get(path);
   },
   instanceOf: Doc
 });
@@ -60,9 +60,8 @@ var DocYamlType = new jsyaml.Type('!g.doc', {
 
 var StaticYamlType = new jsyaml.Type('!g.static', {
   kind: 'scalar',
-  construct: function(data) {
-    data = data || {};
-    return new Static(data);
+  construct: function(path) {
+    return Static.get(path);
   },
   instanceOf: Static
 });
@@ -74,30 +73,9 @@ var schema = jsyaml.Schema.create([
 ]);
 
 
-function getDoc(path) {
-  if (_DOC_CACHE.has(path)) {
-    return _DOC_CACHE.get(path);
-  }
-  let doc = new Doc(path);
-  _DOC_CACHE.set(path, doc);
-  return doc;
-}
-
-
-function getStatic(path) {
-  return new Static(path);
-}
-
-
-function normalizeView(content) {
-  let view = content['$view'] || '/views/base.html';
-  return view.replace('/views', 'views');
-}
-
-
-function gettext(content) {
-  return content;
-}
+/**
+ * Static object.
+ */
 
 
 function Static(path) {
@@ -106,8 +84,18 @@ function Static(path) {
 }
 
 
-function Url() {
-  this.path = '/#TODO';
+Static.get = function(path) {
+  return new Static(path);
+}
+
+
+/**
+ * URL object.
+ */
+
+
+function Url(path) {
+  this.path = path;
 };
 
 
@@ -116,27 +104,20 @@ Url.prototype.toString = function() {
 };
 
 
-function Collection(path) {
-  this.path = path;
-  this.fields = null;
-  this.resolved = false;
-}
-
-
-function Doc(path) {
-  this.path = path;
-  this.fields = null;
-  this.resolved = false;
-
-  this.url = new Url();
-}
+/**
+ * Routes object.
+ */
 
 
 function Routes(path) {
   this.path = path;
   this.trie = new Trie();
-  this.doc_ = getDoc(path);
+  this.doc_ = Doc.get(path);
 }
+
+
+Routes.prototype.reverse = function(doc) {
+};
 
 
 Routes.prototype.match = function(path) {
@@ -152,7 +133,7 @@ Routes.prototype.match = function(path) {
     return data.doc;
   } else if (data.collection) {
     // NOTE: So hacky. We should have methods to convert routes nicely.
-    return getDoc(data.collection + match.params['base'] + '.yaml');
+    return Doc.get(data.collection + match.params['base'] + '.yaml');
   }
 };
 
@@ -167,8 +148,39 @@ Routes.prototype.resolve = async function() {
 }
 
 
+/**
+ * Pod object.
+ */
+
+
 function Pod() {
   this.routes = new Routes('/routes.yaml');
+}
+
+
+/**
+ * Document object.
+ */
+
+
+function Doc(path) {
+  this.path = path;
+  this.fields = null;
+  this.resolved = false;
+
+  this.url = new Url(path);
+}
+
+
+Doc.get = function(path) {
+  // Docs are a bit expensive with all the YAML fetching and parsing. Use a
+  // global doc cache because once docs are resolved they don't change.
+  if (_DOC_CACHE.has(path)) {
+    return _DOC_CACHE.get(path);
+  }
+  let doc = new Doc(path);
+  _DOC_CACHE.set(path, doc);
+  return doc;
 }
 
 
@@ -182,6 +194,7 @@ Doc.prototype.populate = function() {
 
 
 Doc.prototype.toString = function() {
+  // Star to indicate unresolved fields, useful for debugging.
   if (this.resolved) {
     return '<Doc [path=' + this.path + ']>';
   } else {
@@ -209,6 +222,8 @@ Doc.prototype._resolve = async function() {
   if (_HTTP_CACHE.has(this.path)) {
     var resp = _HTTP_CACHE.get(this.path);
   } else {
+    // NOTE: We want to abstract this out probably so we can use fs in the Node
+    // env.
     var resp = await jQuery.get(this.path);
     _HTTP_CACHE.set(this.path, resp);
   }
@@ -219,29 +234,41 @@ Doc.prototype._resolve = async function() {
 };
 
 
+Doc.prototype.getView = function() {
+  let view = this.fields['$view'] || '/views/base.html';
+  return view.replace('/views', 'views');
+};
+
+
+function gettext(content) {
+  return content;
+}
+
+
 /**
  * Set up the nunchucks env.
  */
 
-var _ENV = nunjucks.configure('../', {
-  autoescape: true,
-  web: {
-    async: true
-  }
-});
 
-_ENV.addFilter('resolve', async function(resolver, cb) {
-  await resolver.resolve();
-  cb(null, resolver);
-}, true);
-
-_ENV.addFilter('localize', function(str) {
-  return str;
-});
-
-_ENV.addFilter('json', function(obj) {
-  return JSON.stringify(obj);
-});
+function setupNunjucks() {
+  let env = nunjucks.configure('../', {
+    autoescape: true,
+    web: {
+      async: true
+    }
+  });
+  env.addFilter('resolve', async function(resolver, cb) {
+    await resolver.resolve();
+    cb(null, resolver);
+  }, true);
+  env.addFilter('localize', function(str) {
+    return str;  // No-op.
+  });
+  env.addFilter('json', function(obj) {
+    return JSON.stringify(obj);
+  });
+  return env;
+}
 
 
 async function main() {
@@ -251,24 +278,27 @@ async function main() {
   let pod = new Pod();
   await pod.routes.resolve();
 
-  // Get the doc that corresponds to the URL.
+  // Get the doc that corresponds to the URL path.
   let doc = pod.routes.match(window.location.pathname);
-
   await doc.resolve();
+
   let endTime = performance.now();
   console.log('Loaded: ' + Math.floor(endTime - startTime) + 'ms');
 
-  // Render the doc and write the output to the browser document.
-  startTime = performance.now();
-  let view = normalizeView(doc);
-  let html = _ENV.render(view, {
+  // Use these params for all template envs.
+  let params = {
+    '_': gettext,
     'doc': doc,
     'g': {
-      'doc': getDoc,
-      'static': getStatic
-    },
-    '_': gettext
-  }, function(err, res) {
+      'doc': Doc.get,
+      'static': Static.get
+    }
+  }
+
+  // Render the doc and write the output to the browser document.
+  startTime = performance.now();
+  let env = setupNunjucks();
+  let html = env.render(doc.getView(), params, function(err, res) {
     let endTime = performance.now();
     document.write(res);
     document.close();
