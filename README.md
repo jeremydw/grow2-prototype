@@ -13,7 +13,7 @@ npm start
 
 Reads files from [https://github.com/jeremydw/grow2-prototype](https://github.com/jeremydw/grow2-prototype).
 
-Just visit [https://grow2-prototype.grow-prod.appspot.com](https://grow2-prototype.grow-prod.appspot.com).
+Just visit [https://grow2-prototype-dot-grow-prod.appspot.com/](https://grow2-prototype-dot-grow-prod.appspot.com/).
 
 ## Notes
 
@@ -21,6 +21,7 @@ Just visit [https://grow2-prototype.grow-prod.appspot.com](https://grow2-prototy
 - Resolves YAML and templates in-browser.
 - Implements basic routing.
 - Stubs for gettext.
+- No CI needed! It reads files live from the HEAD of the repo.
 
 ## What else to prototype
 
@@ -28,3 +29,4 @@ Just visit [https://grow2-prototype.grow-prod.appspot.com](https://grow2-prototy
 - Node-based implementation of `grow build` equivalent (on CLI).
 - Localization (i.e. localized routing, text translation).
 - Localization in YAML (do we do this with `@<locale>` again?)
+- Listing directories. Not sure if we can do this without a proxy between the app and GitHub.
