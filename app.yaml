@@ -11,22 +11,27 @@ handlers:
 - url: /internal/grow.js
   static_files: internal/grow.js
   upload: internal/grow.js
+  expiration: 1s
   secure: always
 - url: /(.*\..*)
   static_files: internal/grow.html
   upload: internal/grow.html
+  expiration: 1s
   secure: always
 - url: /(.+)/
   static_files: internal/grow.html
   upload: internal/grow.html
+  expiration: 1s
   secure: always
 - url: /(.+)
   static_files: internal/grow.html
   upload: internal/grow.html
+  expiration: 1s
   secure: always
 - url: /
   static_files: internal/grow.html
   upload: internal/grow.html
+  expiration: 1s
   secure: always
 
 skip_files:

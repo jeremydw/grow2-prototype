@@ -250,7 +250,8 @@ Doc.prototype._resolve = async function() {
     // NOTE: We want to abstract this out so we can use fs in the Node env.
     let path = this.path;
     if (ENV == 'github') {
-      path = GITHUB_ROOT + this.path;
+      // Bust cache to force github refreshes.
+      path = GITHUB_ROOT + this.path + '?cb=' + performance.now();
     }
     var resp = await jQuery.get(path);
     _HTTP_CACHE.set(this.path, resp);
