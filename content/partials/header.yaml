@@ -1,0 +1,4 @@
+nav:
+- !g.doc /content/pages/index.yaml
+- !g.doc /content/pages/about.yaml
+- !g.doc /content/pages/contact.yaml

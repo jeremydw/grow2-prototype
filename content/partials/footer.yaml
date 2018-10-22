@@ -1,0 +1,7 @@
+nav:
+- title: Company
+  url: "https://www.google.com/about/"
+- title: "Privacy & Terms"
+  url: "https://www.google.com/policies/"
+- title: Help Center
+  url: "https://support.google.com/"

@@ -1,0 +1,17 @@
+$title: Grow2 About
+description: Grow2 Description
+
+partials:
+- partial: hero
+  title: Hero title.
+  cta:
+    title: Hero CTA
+    url: 'http://example.com'
+- partial: cols
+  cols:
+  - title: Col 1 title
+    body: Lorem ipsum dolor sit amet.
+  - title: Col 2 title
+    body: Lorem ipsum dolor sit amet.
+  - title: Col 3 title
+    body: Lorem ipsum dolor sit amet.

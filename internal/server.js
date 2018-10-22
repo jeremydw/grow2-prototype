@@ -4,8 +4,9 @@ const express = require('express');
 var app = express();
 app.use('/content', express.static(path.join(__dirname, '../content/')));
 app.use('/views', express.static(path.join(__dirname, '../views/')));
+app.use('//views', express.static(path.join(__dirname, '../views/')));
 app.use('/internal', express.static(__dirname));
-app.get('/*', function(req, res) {
+app.get('/', function(req, res) {
   res.sendFile(__dirname + '/grow.html');
 });
 

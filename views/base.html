@@ -1,6 +1,55 @@
 <!DOCTYPE html>
-<title>hello world</title>
-{% for item in doc.items %}
-  <h1>{{item.title}}</h1>
-  <p>{{item.body}}</p>
-{% endfor %}
+<html lang="{{doc.locale}}"{% if doc.locale.is_rtl %} dir="rtl"{% endif %}>
+  <head>
+    <meta charset="utf-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, height=device-height">
+    <title>
+      {% if doc.basename != "index.yaml" and doc.title %}{{_(doc.title)}} – {% endif %}{{_(podspec.title)}}
+    </title>
+    <meta property="og:image" content="{{podspec.meta.social_image_url}}">
+    {% for locale in doc.locales %}
+      {% set localized_doc = doc.localize(locale) -%}
+      <link href="{{localized_doc.url|localize}}" hreflang="{{- 'x-default' if locale == 'en_US' else locale|lower()|replace('_', '-') -}}" rel="alternate">
+    {% endfor %}
+    <meta property="og:title" content="{% if doc.title %}{{doc.title}} – {% endif %}{{podspec.title}}">
+    <meta property="og:site_name" content="{{podspec.title}}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{doc.url|localize}}">
+    {% if doc.description %}
+    <meta name="description" content="{{_(doc.description)}}">
+    <meta property="og:description" content="{{_(doc.description)}}">
+    {% endif %}
+    {% if podspec.meta.favicon_url %}
+    <link rel="shortcut icon" href="{{podspec.meta.favicon_url}}">
+    {% endif %}
+    <link rel="stylesheet" href="">
+    {% if podspec.meta.google_analytics_id %}
+    <script src="//www.google.com/js/gweb/analytics/autotrack.js"></script>
+    <script>
+      var autotrack = new gweb.analytics.AutoTrack({
+        profile: '{{podspec.meta.google_analytics_id}}'
+      });
+    </script>
+    {% endif %}
+  </head>
+  <body>
+    {% set partial = g.doc('/content/partials/header.yaml')|resolve %}
+    {% include "/views/partials/header.html" %}
+    <hr>
+    <div class="main">
+      <h2>Main</h2>
+      {% block main %}
+        {% if doc.partials %}
+          {% asyncEach partial in doc.partials %}
+            {% include '/views/partials/' + partial.partial + '.html' %}
+          {% endeach %}
+        {% endif %}
+      {% endblock %}
+    </div>
+    <hr>
+    {% set partial = g.doc('/content/partials/footer.yaml')|resolve %}
+    {% include "/views/partials/footer.html" %}
+    <script>console.log('Hello from `base.html`.');</script>
+  </body>
+</html>
