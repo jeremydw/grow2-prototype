@@ -1,5 +1,11 @@
 routes:
 - pattern: /
   doc: !g.doc /content/pages/index.yaml
-- pattern: /:base/
-  collection: /content/pages/_blueprint.yaml
+- pattern: /about/
+  doc: !g.doc /content/pages/about.yaml
+- pattern: /contact/
+  doc: !g.doc /content/pages/contact.yaml
+# NOTE: We should support some syntax like this. To do it we need to improve
+# the reverse URL lookup approach.
+#- pattern: /:base/
+#  collection: /content/pages/_blueprint.yaml

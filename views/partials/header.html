@@ -2,7 +2,7 @@
   <h2>Header</h2>
   <ul>
   {% for item in partial.nav %}
-    <li><a href="{{item.url}}">{{item.title}}</a>
+    <li><a href="{{item.url()}}">{{item.title}}</a> - {{item.url()}}
   {% endfor %}
   </ul>
 </div>

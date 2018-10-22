@@ -116,10 +116,6 @@ function Routes(path) {
 }
 
 
-Routes.prototype.reverse = function(doc) {
-};
-
-
 Routes.prototype.match = function(path) {
   // Return the doc to render.
   let match = this.trie.match(path);
@@ -136,6 +132,19 @@ Routes.prototype.match = function(path) {
     return Doc.get(data.collection + match.params['base'] + '.yaml');
   }
 };
+
+
+Routes.prototype.buildUrl = function(doc) {
+  var url = null;
+  this.doc_.fields['routes'].forEach(function(route) {
+    // NOTE: Replace this with some sort of "isInRoute" to see if a route
+    // definition matches a given document.
+    if (route.doc == doc) {
+      url = new Url(route.pattern);
+    }
+  });
+  return url;
+}
 
 
 Routes.prototype.resolve = async function() {
@@ -167,9 +176,16 @@ function Doc(path) {
   this.path = path;
   this.fields = null;
   this.resolved = false;
-
-  this.url = new Url(path);
 }
+
+
+Doc.prototype.url = function() {
+  // pod is a global, but that's bad. Use a factory/builder paradigm to inject
+  // the pod instance into the doc instead. Also, figure out a way to make the
+  // URL lazy so we don't have to do this on object instantiation. Maybe make
+  // it a function call instead? i.e. doc.url().
+  return pod.routes.buildUrl(this);
+};
 
 
 Doc.get = function(path) {
@@ -222,8 +238,7 @@ Doc.prototype._resolve = async function() {
   if (_HTTP_CACHE.has(this.path)) {
     var resp = _HTTP_CACHE.get(this.path);
   } else {
-    // NOTE: We want to abstract this out probably so we can use fs in the Node
-    // env.
+    // NOTE: We want to abstract this out so we can use fs in the Node env.
     var resp = await jQuery.get(this.path);
     _HTTP_CACHE.set(this.path, resp);
   }
@@ -271,13 +286,19 @@ function setupNunjucks() {
 }
 
 
+// NOTE: This is global now, which is bad. Done this way so Docs, Routes, etc.
+// can pull into the Pod object. What we should do instead is use a
+// factory/builder method on the Pod, to always generate Docs, Objects, etc.
+// that way, and then inject the Pod instance onto the Docs (like how Grow1
+// works).
+var pod = new Pod();
+
+
 async function main() {
   let startTime = performance.now();
 
   // Make a pod and resolve the routes from /routes.yaml.
-  let pod = new Pod();
   await pod.routes.resolve();
-
   // Get the doc that corresponds to the URL path.
   let doc = pod.routes.match(window.location.pathname);
   await doc.resolve();
