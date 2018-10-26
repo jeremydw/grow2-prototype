@@ -214,6 +214,9 @@ Doc.prototype.populate = function() {
   for (var property in this.fields) {
     // TODO: Handle builtins somehow.
     let cleanProperty = property.replace('$', '');
+    if (this.hasOwnProperty(cleanProperty)) {
+      continue;
+    }
     this[cleanProperty] = this.fields[property];
   }
 };
