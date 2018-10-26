@@ -7,3 +7,13 @@ partials:
   cta:
     title: Hero CTA
     url: 'http://example.com'
+- partial: hero
+  title: About. Testing another GitHub edit.
+  cta:
+    title: Hero CTA
+    url: 'http://example.com'
+- partial: hero
+  title: About. Testing another GitHub edit.
+  cta:
+    title: Hero CTA
+    url: 'http://example.com'
