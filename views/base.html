@@ -10,12 +10,10 @@
     <meta property="og:image" content="{{podspec.meta.social_image_url}}">
     {% for locale in doc.locales %}
       {% set localized_doc = doc.localize(locale) -%}
-      <link href="{{localized_doc.url|localize}}" hreflang="{{- 'x-default' if locale == 'en_US' else locale|lower()|replace('_', '-') -}}" rel="alternate">
     {% endfor %}
     <meta property="og:title" content="{% if doc.title %}{{doc.title}} – {% endif %}{{podspec.title}}">
     <meta property="og:site_name" content="{{podspec.title}}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="{{doc.url|localize}}">
     {% if doc.description %}
     <meta name="description" content="{{_(doc.description)}}">
     <meta property="og:description" content="{{_(doc.description)}}">

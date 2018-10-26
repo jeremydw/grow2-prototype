@@ -5,6 +5,7 @@ if (window.location.href.indexOf('localhost') > -1) {
 }
 
 var GITHUB_ROOT = 'https://raw.githubusercontent.com/jeremydw/grow2-prototype/master'; 
+var REFRESH_CACHE = new URL(window.location.href).searchParams.has('refresh');
 
 
 /**
@@ -244,9 +245,8 @@ Doc.prototype.resolve = async function () {
 
 
 Doc.prototype._resolve = async function() {
-  if (_HTTP_CACHE.has(this.path)) {
-    var resp = _HTTP_CACHE.get(this.path);
-  } else {
+  var resp = await idbKeyval.get(this.path);
+  if (typeof resp == 'undefined' || REFRESH_CACHE) {
     // NOTE: We want to abstract this out so we can use fs in the Node env.
     let path = this.path;
     if (ENV == 'github') {
@@ -254,7 +254,7 @@ Doc.prototype._resolve = async function() {
       path = GITHUB_ROOT + this.path + '?cb=' + performance.now();
     }
     var resp = await jQuery.get(path);
-    _HTTP_CACHE.set(this.path, resp);
+    idbKeyval.set(this.path, resp);
   }
   let fields = await jsyaml.load(resp, {schema: schema});
   this.fields = fields;
@@ -279,17 +279,44 @@ function gettext(content) {
  */
 
 
+var IndexedDbLoader = nunjucks.Loader.extend({
+  async: true,
+  init: function(root, opts) {
+    this.webLoader = new nunjucks.WebLoader(root, opts);
+  },
+  getSource: async function(name, cb) {
+    if (!REFRESH_CACHE) {
+      var resp = await idbKeyval.get(name);
+      if (resp) {
+        cb(null, {
+          'src': resp,
+          'path': name
+        });
+        return;
+      }
+    }
+    this.webLoader.getSource(name, function(err, result) {
+      if (!err) {
+        idbKeyval.set(name, result['src']);
+      }
+      cb(err, result);
+    });
+  }
+});
+
+
 function setupNunjucks() {
   // ../ is a hack. Get it working correctly. See the junk in server.js.
   var root = '../';
   if (ENV == 'github') {
     root = GITHUB_ROOT;
   }
-  let env = nunjucks.configure(root, {
-    autoescape: true,
-    web: {
-      async: true
-    }
+
+  let env = new nunjucks.Environment([
+    new IndexedDbLoader(root, {async: true})
+  ], {
+    async: true,
+    autoescape: true
   });
   env.addFilter('resolve', async function(resolver, cb) {
     await resolver.resolve();
@@ -340,8 +367,12 @@ async function main() {
   let env = setupNunjucks();
   let html = env.render(doc.getView(), params, function(err, res) {
     let endTime = performance.now();
+    // Preserve grow console.
+    var grow = document.getElementById('grow');
+    var el = grow.cloneNode(true);
     document.write(res);
     document.close();
+    document.body.appendChild(el);
     console.log('Rendered: ' + Math.floor(endTime - startTime) + 'ms');
   });
 };
