@@ -17,6 +17,12 @@ partials:
     body: Lorem ipsum dolor sit amet.
   - title: Col 3 title
     body: Lorem ipsum dolor sit amet.
+  - title: Col 1 title
+    body: Lorem ipsum dolor sit amet.
+  - title: Col 2 title
+    body: Lorem ipsum dolor sit amet.
+  - title: Col 3 title
+    body: Lorem ipsum dolor sit amet.
 - partial: hero
   title: Another hero. Here's another hero on this page.
   body: Hero body. Hello from GitHub! Hello from GitHub again. Is this crazy? This might be really dumb, because the performance might not be good enough to load all these files...
