@@ -200,19 +200,29 @@ function Pod() {
 }
 
 
-Pod.prototype.build = async function(path, cb) {
-  // Render the doc and write the output to the browser document.
-  let startTime = performance.now();
-
+Pod.prototype.resolve = async function() {
   // Resolve the routes from /routes.yaml.
   await this.routes.resolve();
+}
 
+
+Pod.prototype.buildAll = function(cb) {
+  let paths = this.routes.paths();
+  paths.forEach(function(path) {
+    this.build(path, function(err, res) {
+      if (cb) {
+        cb(err, res);
+      }
+    });
+  }.bind(this));
+};
+
+
+Pod.prototype.build = async function(path, cb) {
+  console.log('Building -> ' + path);
   // Get the doc that corresponds to the URL path.
   let doc = this.routes.match(path);
   await doc.resolve();
-
-  let endTime = performance.now();
-  console.log('Loaded: ' + Math.floor(endTime - startTime) + 'ms');
 
   // Use these params for all template envs.
   let params = {
@@ -225,11 +235,11 @@ Pod.prototype.build = async function(path, cb) {
   }
   let template = doc.getView();
 
-  startTime = performance.now();
+  let startTime = performance.now();
   this.renderer.render(template, params, function(err, res) {
+    cb(err, res);
     let endTime = performance.now();
     console.log('Rendered: ' + Math.floor(endTime - startTime) + 'ms');
-    cb(err, res);
   });
 }
 
@@ -327,6 +337,7 @@ Doc.prototype._resolve = async function() {
 
 
 Doc.prototype.getView = function() {
+  // TODO: Default should come from podspec.
   let view = this.fields['$view'] || '/views/base.html';
   return view.replace('/views', 'views');
 };
@@ -404,6 +415,8 @@ var pod = new Pod();
 
 
 async function main() {
+  // Render the doc and write the output to the browser document.
+  await pod.resolve();
   pod.build(window.location.pathname, function(err, html) {
     // Preserve grow console.
     var grow = document.getElementById('grow');
