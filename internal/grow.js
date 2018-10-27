@@ -139,7 +139,8 @@ Routes.prototype.match = function(path) {
     return data.doc;
   } else if (data.collection) {
     // NOTE: So hacky. We should have methods to convert routes nicely.
-    return Doc.get(data.collection + match.params['base'] + '.yaml');
+    var collection = data.collection.replace('_blueprint.yaml', '');
+    return Doc.get(collection + match.params['base'] + '.yaml');
   }
 };
 
@@ -149,8 +150,10 @@ Routes.prototype.buildUrl = function(doc) {
   this.doc_.fields['routes'].forEach(function(route) {
     // NOTE: Replace this with some sort of "isInRoute" to see if a route
     // definition matches a given document.
-    if (route.doc == doc) {
-      url = new Url(route.pattern);
+    if (route.doc == doc || route.collection == doc.collection_path) {
+      var pattern = route.pattern;
+      pattern = pattern.replace(':base', doc.base);
+      url = new Url(pattern);
     }
   });
   return url;
@@ -184,6 +187,9 @@ function Pod() {
 
 function Doc(path) {
   this.path = path;
+  this.base = path.split('/', -1).pop().split('.')[0];
+  this.collection_path = path.replace(this.base + '.yaml', '_blueprint.yaml');
+
   this.fields = null;
   this.resolved = false;
 }
