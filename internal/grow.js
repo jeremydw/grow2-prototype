@@ -126,6 +126,23 @@ function Routes(path) {
 }
 
 
+Routes.prototype.paths = function() {
+  var paths = [];
+  this.doc_.fields['routes'].forEach(function(route) {
+    var pattern = route.pattern;
+    // TODO: Support proper expansion of patterns.
+    if (pattern.indexOf(':') == -1) {
+      paths.push(pattern);
+      return;
+    }
+    if (route.collection) {
+      // TODO: List directory and get all paths.
+    }
+  })
+  return paths;
+}
+
+
 Routes.prototype.match = function(path) {
   // Return the doc to render.
   let match = this.trie.match(path);
@@ -177,6 +194,43 @@ Routes.prototype.resolve = async function() {
 
 function Pod() {
   this.routes = new Routes('/routes.yaml');
+
+  // Could be any template language really.
+  this.renderer = setupNunjucks();
+}
+
+
+Pod.prototype.build = async function(path, cb) {
+  // Render the doc and write the output to the browser document.
+  let startTime = performance.now();
+
+  // Resolve the routes from /routes.yaml.
+  await this.routes.resolve();
+
+  // Get the doc that corresponds to the URL path.
+  let doc = this.routes.match(path);
+  await doc.resolve();
+
+  let endTime = performance.now();
+  console.log('Loaded: ' + Math.floor(endTime - startTime) + 'ms');
+
+  // Use these params for all template envs.
+  let params = {
+    '_': gettext,
+    'doc': doc,
+    'g': {
+      'doc': Doc.get,
+      'static': Static.get
+    }
+  }
+  let template = doc.getView();
+
+  startTime = performance.now();
+  this.renderer.render(template, params, function(err, res) {
+    let endTime = performance.now();
+    console.log('Rendered: ' + Math.floor(endTime - startTime) + 'ms');
+    cb(err, res);
+  });
 }
 
 
@@ -350,39 +404,13 @@ var pod = new Pod();
 
 
 async function main() {
-  let startTime = performance.now();
-
-  // Make a pod and resolve the routes from /routes.yaml.
-  await pod.routes.resolve();
-  // Get the doc that corresponds to the URL path.
-  let doc = pod.routes.match(window.location.pathname);
-  await doc.resolve();
-
-  let endTime = performance.now();
-  console.log('Loaded: ' + Math.floor(endTime - startTime) + 'ms');
-
-  // Use these params for all template envs.
-  let params = {
-    '_': gettext,
-    'doc': doc,
-    'g': {
-      'doc': Doc.get,
-      'static': Static.get
-    }
-  }
-
-  // Render the doc and write the output to the browser document.
-  startTime = performance.now();
-  let env = setupNunjucks();
-  let html = env.render(doc.getView(), params, function(err, res) {
-    let endTime = performance.now();
+  pod.build(window.location.pathname, function(err, html) {
     // Preserve grow console.
     var grow = document.getElementById('grow');
     var el = grow.cloneNode(true);
-    document.write(res);
+    document.write(html);
     document.close();
     document.body.appendChild(el);
-    console.log('Rendered: ' + Math.floor(endTime - startTime) + 'ms');
   });
 };
 main();
