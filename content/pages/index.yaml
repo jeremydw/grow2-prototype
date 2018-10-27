@@ -11,7 +11,7 @@ partials:
     url: 'http://example.com'
 - partial: cols
   cols:
-  - title: Col 8 title
+  - title: Col 8 title. GitHub edit.
     body: Lorem ipsum dolor sit amet.
   - title: Col 7 title
     body: Lorem ipsum dolor sit amet.
