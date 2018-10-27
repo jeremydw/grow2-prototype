@@ -21,7 +21,7 @@
     {% if podspec.meta.favicon_url %}
     <link rel="shortcut icon" href="{{podspec.meta.favicon_url}}">
     {% endif %}
-    <link rel="stylesheet" href="">
+    <link href="{{g.static('/source/css/main.css').url()}}" rel="stylesheet">
     {% if podspec.meta.google_analytics_id %}
     <script src="//www.google.com/js/gweb/analytics/autotrack.js"></script>
     <script>

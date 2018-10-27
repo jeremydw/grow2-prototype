@@ -1,9 +1,16 @@
 routes:
+
+- pattern: /static/:base
+  static_dir: /source/css/
+
 - pattern: /
   doc: !g.doc /content/pages/index.yaml
+
 - pattern: /contact/
   doc: !g.doc /content/pages/contact.yaml
+
 - pattern: /about/
   doc: !g.doc /content/pages/about.yaml
+
 #- pattern: /:base/
 #- collection: /content/pages/_blueprint.yaml

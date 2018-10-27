@@ -1,5 +1,7 @@
 title: Grow2 Test Site
+
 localization:
   default_locale: en_US
+
 meta:
   google_analytics_id: 'UA-12345-XX'

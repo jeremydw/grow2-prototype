@@ -25,6 +25,11 @@ async function iterate(obj, cb) {
 }
 
 
+function base(path) {
+  return path.split('/', -1).pop().split('.')[0];
+}
+
+
 /**
  * Cache to avoid round-trips to the server for files.
  */
@@ -90,8 +95,19 @@ var schema = jsyaml.Schema.create([
 
 function Static(path) {
   this.path = path;
-  this.url = path;
+  this.ext = path.split('.').pop();
+  this.base = base(path);
+  this.basename = this.base + '.' + this.ext;
 }
+
+
+Static.prototype.url = function() {
+  // Serve static files from GitHub.
+  if (ENV == 'github') {
+    return GITHUB_ROOT + this.path;
+  }
+  return pod.routes.buildStaticUrl(this);
+};
 
 
 Static.get = function(path) {
@@ -104,7 +120,7 @@ Static.get = function(path) {
  */
 
 
-function Url(path) {
+function Url(path, opts) {
   this.path = path;
 };
 
@@ -160,6 +176,21 @@ Routes.prototype.match = function(path) {
     return Doc.get(collection + match.params['base'] + '.yaml');
   }
 };
+
+
+Routes.prototype.buildStaticUrl = function(staticObj) {
+  var url = null;
+  this.doc_.fields['routes'].forEach(function(route) {
+    // NOTE: Replace this with some sort of "isInRoute" to see if a route
+    // definition matches a given static.
+    if (staticObj.path.startsWith(route.static_dir)) {
+      var pattern = route.pattern;
+      pattern = pattern.replace(':base', staticObj.basename);
+      url = new Url(pattern);
+    }
+  });
+  return url;
+}
 
 
 Routes.prototype.buildUrl = function(doc) {
@@ -251,7 +282,7 @@ Pod.prototype.build = async function(path, cb) {
 
 function Doc(path) {
   this.path = path;
-  this.base = path.split('/', -1).pop().split('.')[0];
+  this.base = base(path);
   this.collection_path = path.replace(this.base + '.yaml', '_blueprint.yaml');
 
   this.fields = null;
