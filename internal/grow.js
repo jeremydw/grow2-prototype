@@ -30,6 +30,20 @@ function base(path) {
 }
 
 
+/** To get around a GitHub mimetype issue, replace <link> style tags with inlined CSS. */
+function replaceLinkedStyles(browserDoc) {
+  var linkEls = browserDoc.querySelectorAll('link[href^="' + GITHUB_ROOT + '"]');
+  console.log(linkEls);
+  [].forEach.call(linkEls, async function(el) {
+    var url = el.getAttribute('href');
+    var resp = await jQuery.get(url);
+    var inlineEl = browserDoc.createElement('style');
+    inlineEl.textContent = resp;
+    el.parentNode.replaceChild(inlineEl, el);
+  });
+};
+
+
 /**
  * Cache to avoid round-trips to the server for files.
  */
@@ -455,6 +469,10 @@ async function main() {
     document.write(html);
     document.close();
     document.body.appendChild(el);
+    // Hack to get this working with GitHub.
+    replaceLinkedStyles(document);
   });
 };
+
+
 main();
