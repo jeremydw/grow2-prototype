@@ -33,7 +33,6 @@ function base(path) {
 /** To get around a GitHub mimetype issue, replace <link> style tags with inlined CSS. */
 function replaceLinkedStyles(browserDoc) {
   var linkEls = browserDoc.querySelectorAll('link[href^="' + GITHUB_ROOT + '"]');
-  console.log(linkEls);
   [].forEach.call(linkEls, async function(el) {
     var url = el.getAttribute('href');
     var resp = await jQuery.get(url);
@@ -246,8 +245,11 @@ function Pod() {
 
 
 Pod.prototype.resolve = async function() {
+  let startTime = performance.now();
   // Resolve the routes from /routes.yaml.
   await this.routes.resolve();
+  let endTime = performance.now();
+  console.log('%cpod.resolve -> ' + Math.floor(endTime - startTime) + 'ms', 'background: black; color: white;');
 }
 
 
@@ -280,11 +282,11 @@ Pod.prototype.build = async function(path, cb) {
   }
   let template = doc.getView();
 
-  let startTime = performance.now();
+  startTime = performance.now();
   this.renderer.render(template, params, function(err, res) {
     cb(err, res);
-    let endTime = performance.now();
-    console.log('Rendered: ' + Math.floor(endTime - startTime) + 'ms');
+    endTime = performance.now();
+    console.log('%cpod.build -> ' + Math.floor(endTime - startTime) + 'ms', 'background: black; color: white;');
   });
 }
 
@@ -351,7 +353,7 @@ Doc.prototype.resolve = async function () {
   if (this.resolved) {
     return;
   }
-  console.log('Resolving', this.path);
+  console.log('Resolving ->', this.path);
   await this._resolve();
   async function cb(obj) {
     if (obj.resolve) {
