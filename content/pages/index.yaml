@@ -4,7 +4,7 @@ description: Grow2 Description
 
 partials:
 - partial: hero
-  title: Hello World! This is the title.
+  title: Hello Mike and Jens! Ths is the title.
   body: Hero body, this time with an update from Ian! Hello from GitHub! Hello from Ian! Is this crazy? This might be really dumb, because the performance might not be good enough to load all these files...
   cta:
     title: Hero CTA
